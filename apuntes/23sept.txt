@@ -1,0 +1,51 @@
+asp net core-MVC
+-------------------
+CORE ES LA ULTIMA VERSION
+asp NET Core 3.1 
+APLICACION WEB ASP .NETCORE 
+	AgapeaNetCore
+C:\users\<nombreUsuario>\source\repos\ 
+(siguiente)
+
+usaremos plantilla vacia
+o (mVC) M MODELO CLASES DE ACCESO A DATOS
+	V MODULOS DE CODIGO QUE REPRESENTA LOS DATOS AL USUARIO 
+	C C
+
+ESTRUCTURA DE UN PROYECTO DE ASP.NET CORE -MVC
+----------------------------------------
+PUNTO DE ENTRADA AL PROGRAMA ES LA CLASE :Program.cs
+el metodo de la clase 
+
+        public static void Main(string[] args)
+        {
+            CreateHostBuilder(args).Build().Run();
+        } \--> metodo de configuracion del sevidor web KESTREL que carga tu proyecto 
+
+ARQUITECUTRA NET CORE
+cliente 						servidor aspe .net core
+hhtps://localhost:xxx/recurso------------------> -----------KESTREL(envoltorio)--------- 	
+ 							de forma interna 
+				HTTP-REQUEST			|
+								| => IIS (INTERNET INFORMATION SERVER PARA QUE FUNCIONE EL MODO MULTIPLATAFORMA)
+								IIS = > ES UN SERVICIO QUE SE LEVANTA... EL AUTENTICO SERVIDOR
+BOTON DERECHO PROYECTO=> PROPIEADES DE PROYECTO ,
+PESTAÑA ->DEPURAR ABAJO... HABILITAR SSL==> URL
+
+
+
+ficheroo stratup.cs tiene dos metodos
+- ConfigureServices ---> se define el MODULO DE INYECCION DE DEPENDENCIAS O servicios que van a usarse
+			durante toda la aplicacion
+-Configure--------------> se definen todos los modulos de la ipeline del servidor jestrel que van a procesar la peticion del cliente y generar
+			la respuesta
+			Hay un modulo basico que se encarga del enrutamiento o ROUTING
+
+modulo de ROUTING (enrutamiendo de la pipeline de kestrel)
+---------------------------------------------
+es el encargado de procesar la URL que solicita el cliente en su HTTP-REQUEST
+ver desde dentro de la tabla de rutas qe tiene definidas cual se ajusta mejor a la 
+solicitada (pattern-searching), y la de mayor coincidencia , ejecutar dentro 
+DEL CONTROLADOR q tiene efinida la ruta, el METODO seleccionado, el cual
+generara una accion o VISTA al cliente
+

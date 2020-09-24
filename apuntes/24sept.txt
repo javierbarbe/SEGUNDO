@@ -1,0 +1,62 @@
+CONYTROLADOR QUE TIENE DEFINIDA LA RUTA
+
+modulo de ROUTING (enrutamiendo de la pipeline de kestrel)
+---------------------------------------------
+es el encargado de procesar la URL que solicita el cliente en su HTTP-REQUEST
+ver desde dentro de la tabla de rutas (ENDPOINTS) qe tiene definidas cual se ajusta mejor a la 
+solicitada (pattern-searching), y la de mayor coincidencia , ejecutar dentro 
+DEL CONTROLADOR q tiene efinida la ruta, el METODO seleccionado, el cual
+generara una accion o VISTA al cliente
+
+
+cliente ---------------------------------------------------> servidor web asp.net core
+
+https://localhost:Xxx/valor1/valor2/valor3?variable=valor?variable2=valor2...  // & en lugar de ? al separar variables??
+					 ----> 
+					   http-request  KESTREL (PIPELINE)
+						--------------------------				
+					   modulo1 ->..-> modulo enrutado
+								||
+							split de la URL:
+		valores de enrutamiento			segmento1=valor1
+		(RouteValues)=>				segmento2=valor2
+							segmento3=valor3
+				
+							? variable=valor&....
+							---------------------
+							QUERYSTRING de la ruta
+
+compara a partir del primer segmento
+no tiene en cuenta ->https:localhost:Xxx
+
+a continuacion el modulo de enrutamiento cva a la coleccion de ENDPOINTS  o tabla de rutas
+a buscar alguna coincidencia. Cada ENDPOINT se define: 
+	-patron de la URL a buscar
+	-accion a ejecutar si se cumple el patron
+
+por defecto, nos definen un ENDPOINT lo mas generico posible
+  
+	endpoints.MapControllerRoute(
+                    name: "default",
+				 1 SEGMENTO	 2 SEGMENTO	3SEGMENTO
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+
+1 SEGMENTO se mapea vs controller; por defecto es Home
+2 segmento se mapea vs action; por defecto es Index
+3 segmento es oopcional
+
+ej si el cliente se conecta a esta url: 
+//controller action page y area (nombres reservados para los segmentos)
+el modulo controller dice que controlador tiene que cargar
+action el metodo del controlador a ejecutar
+dentro de la clase controller una clase llamada PanelUsuario con el metodo MisPedidos
+
+https://localhost:xxxx/ ---> segmento1 (no aparece) por defecto=> controller=Home 
+			---> segmento2  (no aparece) por defecto=> action=Index
+
+https://localhost:xxxx:/PanelUsuario/MisPedidos
+			----------   ---------
+			segmento1     segmento2: asociado a action, su valor es MisPedidos
+			controller=PanelUsuario
+			action=MisPedidos
