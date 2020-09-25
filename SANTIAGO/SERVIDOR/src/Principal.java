@@ -11,6 +11,7 @@ public class Principal {
 //		Entrada miEntrada = new Entrada();
 //		miEntrada.getConnection();
 		Seguir2 seguido = new Seguir2();
+		
 	}
 
 }

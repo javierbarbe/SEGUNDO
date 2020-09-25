@@ -36,6 +36,7 @@ public class Conectar {
 			Class.forName("com.mysql.jdbc.Driver");
 			//System.out.println(server);
 			myConexion = DriverManager.getConnection(server, user, password);
+			myConexion.setAutoCommit(false);
 			System.out.println("conexion correcta");
 			System.out.println("el user es: "+user);
 			System.out.println("el password es: "+password);
@@ -55,8 +56,12 @@ public class Conectar {
 		
 	
 		return myConexion;
+	} // fin myConection
+	
+	public void errores (Exception e, String ordenSql){
+		System.out.println("se ha producido una excepcion");
+		System.out.println(e.getMessage());
+		System.out.println("por la ordenSQL "+ordenSql);
 	}
-	
-	
 
 }
