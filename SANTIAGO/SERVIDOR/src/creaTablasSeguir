@@ -1,0 +1,195 @@
+package callableStatement;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+class Consulta {
+	public String[] nombreCampo;
+	public String[] tipoCampo;
+	public String[] constraints;
+	public int tamanio;
+	public Consulta(int longArrays) {
+		this.tamanio=longArrays;
+		nombreCampo = new String[longArrays];
+		tipoCampo = new String[longArrays];
+		constraints = new String[longArrays];
+	}
+}
+
+public class Seguir2 {
+	// atributos
+	private Connection con;
+	Scanner sc = new Scanner(System.in);
+	private Conectar proceso;
+	private String orden;
+	private String usu = "root", pas = "despliegue", base = "base1";
+	ArrayList<String> lista = new ArrayList<String>();
+
+	public Seguir2() {
+
+		proceso = new Conectar(usu, pas, base);
+		con = proceso.getConnection();
+		if (con == null) {
+			System.out.println("CONEXION IMPOSIBLE");
+		} else {
+			System.out.println("CONEXION CORRECTA");
+			//
+//			ejecutaConsulta();
+//			confirmar();
+			System.out.println("deseas crear una tabla??");
+			String respuesta = sc.nextLine();
+			if (respuesta.equalsIgnoreCase("s")) {
+				System.out.println("Nombre de la tabla");
+				String nombreTabla = sc.nextLine();
+				System.out.println("Cuantos campos va a tener?");
+				int numCampos = sc.nextInt();
+				Consulta tablon = new Consulta(numCampos);
+				crearTabla(nombreTabla,tablon);
+				
+		}
+
+		proceso.cerrar(con);
+	} // fin de constructor x defecto
+	}
+	private void crearTabla(String tabla, Consulta arrayPadre) {	
+			for (int i = 0; i < arrayPadre.tamanio; i++) {
+				sc.nextLine();
+				System.out.println("Nombre del  campo " + i);
+				String ncmp = sc.nextLine();
+				arrayPadre.nombreCampo[i] = ncmp;
+				System.out.println("Tipo de dato?");
+				String tipoDato = sc.nextLine();
+				switch (tipoDato) {
+				case "numero":
+					 arrayPadre.tipoCampo[i]=tipoDato;
+					break;
+				case "string":
+					arrayPadre.tipoCampo[i]=tipoDato+"(20)";
+					break;
+				default:
+					System.out.println("dato no especificado en la tabla " + tabla);
+					break;
+				} // fin del switch filtrando tipoDato==============================
+				System.out.println("Lleva constraints el  campo " + arrayPadre.nombreCampo[i] + " ?");
+				String respuestaConstraints = sc.nextLine();
+				if (respuestaConstraints.equalsIgnoreCase("s")) {
+					System.out.println("Escribe cuidadosamente el tipo de constraint");
+					String constraint1 = sc.nextLine();
+					 arrayPadre.constraints[i] =constraint1;
+				} else {
+					System.out.println("muy bien, sin constraints ese campo");
+				}
+			
+
+		}
+		// ---------- DECLARACION METODO juntando LOS ARRAYS----------
+		String sentenciaCampos = "";
+
+		for (int i = 0; i < arrayPadre.tamanio; i++) {
+			sentenciaCampos += arrayPadre.nombreCampo[i] + " ";
+			sentenciaCampos += arrayPadre.tipoCampo[i] + " ";
+			sentenciaCampos += arrayPadre.constraints[i];
+			if(i!=arrayPadre.tamanio-1){
+				System.out.println(i + "vale i");
+				sentenciaCampos+= ", ";
+			}
+		}
+		orden = "CREATE TABLE " + tabla + " (" + sentenciaCampos +" )";
+		System.out.println(orden);
+	}
+
+	private ArrayList aniadeCampos(String campo) {
+		lista.add(campo);
+		return lista;
+	}
+
+	private void ejecutaConsulta() {
+		ResultSet rs;
+		CallableStatement cs;
+		PreparedStatement ps;
+		String nombre, ciudad, tabla;
+		int edad, numero;
+		// System.out.println("introduce nombre DE CIUDAD a BUSCAR");
+		// ciudad = sc.nextLine();
+		//
+		// System.out.println("introduce Tabla a buscar");
+		// tabla = sc.nextLine();
+		//
+		// System.out.println("introduce edad a agregar");
+		// Dead = sc.nextInt();
+		nombre = "joseluicicles";
+		numero = 22;
+		ciudad = "alcala";
+		tabla = "proveedores";
+		edad = 20;
+
+		if (tabla.equalsIgnoreCase("clientes")) {
+			// nombre numero ciudad edad
+			orden = "{call insertarclientes(?,?,?,?)}";
+		} else {
+			orden = "{call insertarproveedores(?,?,?,?)}";
+		}
+		try {
+			orden = "INSERT INTO  " + tabla + " VALUES(?,?,?,?)";
+
+			cs = con.prepareCall(orden);
+			cs.setString(1, nombre);
+			cs.setInt(2, numero);
+			cs.setString(3, ciudad);
+			cs.setInt(4, edad);
+			cs.execute();
+			String nomb = cs.getString(1);
+			System.out.println(nomb);
+			if (cs.execute()) {
+				System.out.println("el nombre es " + cs.getString(1));
+				System.out.println("el numero es  " + cs.getInt(2));
+				System.out.println("la ciudad es " + cs.getString(3));
+				System.out.println("la edad es " + cs.getInt(4));
+			} else {
+				System.out.println("No has hecho nada pringado");
+			}
+			rs = cs.getResultSet();
+			while (rs.next()) {
+				System.out.println("el nombre es " + rs.getString(1));
+				System.out.println("el numero es  " + rs.getInt(2));
+				System.out.println("la ciudad es " + rs.getString(3));
+				System.out.println("la edad es " + rs.getInt(4));
+			}
+		} catch (SQLException e) {
+			System.out.println("error al crear el statement");
+			System.out.println(e.getMessage());
+			proceso.errores(e, orden);
+			//
+			e.printStackTrace();
+		}
+
+	} // fin de inserta
+
+	private void confirmar() {
+		String respuesta = "";
+		System.out.println("DESEA CONFIRMAR CAMBIOS?? S/N");
+		respuesta = sc.nextLine();
+		try {
+			if (respuesta.equalsIgnoreCase("S")) {
+				System.out.println("has confirmado la operacion");
+				con.commit();
+
+			} else {
+				System.out.println("has cancelado la operacion");
+				con.rollback();
+
+			}
+		} catch (SQLException e) {
+			System.out.println("error al hacer commit/rollback");
+			System.out.println(e.getMessage());
+		}
+
+	}
+
+}
