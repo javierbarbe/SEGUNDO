@@ -1,0 +1,127 @@
+--MANDAR CORREOS 
+
+
+-- HAY QUE ENTRAR COMO SYS
+SELECT * FROM USER_NETWORK_ACL_PRIVILEGES; 
+SI NO DAS PERMISOS HAY QUE IRSE FUERA
+--SI QUIERO MANDAR UN CORREO NECESITO ACCEDER A UN SERVIDOR DE GMAIL(IRME FUERA)
+--EL SERVIDOR DE GMAIL REQUIERE AUTENTIFICACION...
+-- CON STUNNER 8(QE SE EJECUTA EN LOCALHOST) PODEMOS HACER LA ATENTIFICACION
+VOY A PERMITIR DESDE ORACLE CONECTARME A ESE PUERTO
+EN LA VISTA DE LA SELECT VEMOS LOS PIERTOS A LOS QUE DESDE PL PODEMOS ACCEDER
+PODEMOS VER LOS HOST A LO QUE PODEMOS ACCEDER , LOS HOST, EL PUERTO
+
+
+COMO SYS HAY QUE DAR ACL (ACCESO CONTROL LIST) 
+PARA PODERLAS CREAR 
+begin
+DBMS_NETWORK_aCL_ADMIN.CREATE_ACL( 
+	ACL=> 'gmail.xml', -- tiene que acabar en xml obligatoriamnte
+	DESCRIPTION=> 'Normal Access', -- lo que quieras
+	principal=> 'PROFE', -- propietario
+	is_grant=> TRUE,
+	privilege =>'connect', -- resolve o resource (no los usaremos)
+	start_date=> null,
+	end_date=> null);
+end;
+
+-- una vez creada hay que dar privilegios
+begin
+dbms_network_admin.add_privilege(
+acl => 'gmail.xml'
+principal => 'profe'
+is_grant => true,
+privilege => 'connect'
+start_date=> null
+end_Date=> null
+end;
+
+
+--- para asignar socket  ... es decir dominios y puertos  nosotros salimos fuerar a una mauqina
+--por un puerto
+begin
+dbms_network_admin.assign_acl(
+acl => 'gmail.xml',
+host=> 'localhost',
+lower_port=> 1925, -- si no pongo nada por defecto coge el 80
+upper_port=> 1925);
+
+-- hay un programa que se llama stunnel que nos va a servir de proxy de autentificacion de gmail
+-- vamos al archivo de conifgurcion que se llama stunnel.conf cuyo contenido es:
+
+		client = yes
+
+		[ssmtp]
+		accept  = 1925
+		connect = smtp.gmail.com:465
+		end; 
+
+-- para mandar correos stunnel tiene que estar lanzado
+
+
+
+--creamos el paquete para  mandar el correo 
+create or replace package correo as 
+
+HOST VARCHAR2(256):= 'localhost';
+PUERTO pls_integer:=1925 ; 
+DOMINIO varchar2(256) := 'gmail.com';
+AGENTE constan varchar2(256) :=' Remitido por ORACLE 11gR2 DAW2';
+
+-- CREAR LAS CABECERAS 
+
+
+PROCEDURE CABECERA ( ) -- TERMINAR DE COPIAR
+
+
+-- CORREO CON TEXTO
+PROCEDURE MANDAR_CORREO (REMITE IN VARCHAR2,
+			DESTINO IN VARCHAR2,
+			ASUNTO IN VARCHAR2,
+			TEXTO IN VARCHAR2) IS
+CON UTL_SMTP.CONNECTION;
+CODIFICACION VARCHAR2(255); 
+BEGIN 
+-- CODIGICACION DEL SISTEMA
+SELECT VALUE 
+INTO CODIFICACION FROM
+NLS_DATABASE_PARAMETERS
+WHERE PARAMETER = 'NLS_CHARACTERSET';
+
+-- CONEXION CON AUTENTIDICACION
+
+CON:= UTL_SMTP.OPEN_CONNECTION(HOST,PUERTO);
+UTL_SMTP.EHLO(CON,DOMINIO);
+UTL_SMTP.COMMAND(CON, 'auth login');
+UTL_SMTP.COMMAND(CON, UTL_ENCODE.TEXT_ENCODE('DAW2AVELLANEDA@GMAIL.COM', -- PONER CORREO
+						CODIFICACION,
+						1));
+UTL_SMTP.COMMAND(CON, UTL_ENCODE.TEXT_ENCODE('jachis1000', codificacion, 1) ); -- PONER CLAVE
+
+-- AJUSTAR CORREOS 
+UTL_SMTP.COMMAND(CON, 'MAIL FROM: <' ||REMITE|| '>');
+UTL_SMTP.COMMAND(CON, 'RCPT TO: <' ||DESTINO|| '>');
+
+-- ESCRIBIR LAS CABECERAS
+
+UTL_SMTP.OPEN_DATA(CON);
+CABECERA ( CON , 'From' , REMITE);
+CABECERA ( CON , 'To' , DESTINO);
+CABECERA ( CON , 'Subject' , ASUNTO);
+CABECERA ( CON , 'Content-Type' , 'text/plain');
+CABECERA ( CON , 'X-Mailer' , AGENTE); -- NO SABEMOS QUE ES AGENTE
+
+utl_smtp.write_data(con, utl_tcp. -- sin terminar...
+
+-- CONEXION DE AUTENTIFICACION
+
+end correo;
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,85 @@
+
+
+create table multimedia(
+nom number,
+nomb varchar2(20),
+foto blob,
+voz blob,
+texto clob,
+externo bfile);
+create directory  ruta as 'C:\multi2';
+
+select * from multimedia;
+
+insert into multimedia values ( 1, 'uno', empty_blob(), empty_blob(), empty_clob(), null);
+
+
+necesitamos un objeto directory ( requiere derecho create any directory) 
+=>  grant create any directory to  USUario;  ==>> COMO SYS O SYSTEM
+--tambien se puede dar derechos de lectura escritura sobre un objeto ya hecho
+
+
+creamos una nueva carpeta a la que daremos derechos  en C:\multi2
+
+create directory ruta as 'C:\multi2'; ====> EJECUTAR CONSULTA
+--mi tabla multimedia se llama multimedia 
+insert into multimedia values ( 2,'dos',  empty_blob(), empty_blob(), empty_clob(),
+bfilename ('RUTA', 'inicial2.jpg'));
+
+--- IMPORTANTEEEEEEEEEEEEEEE QUE EL OBJETO RUTA LO ESCRIBA EN MAYUSCULA ... AUNQUE ESTE GENERADO EN MINUSCULA
+
+
+---------PARA CARGARLO CLIC CLIC
+BOTON DEREECHO SOBRE LA TABLA (EN CONSULTA SELECT X EJ:)
+EDIT DATA=>
+CLIC SOBRE LA COLUMNA QUE QIERA DE LA TUPLA  EN LOS TRES  PUNTOS
+PESTAÑA DE ARRIBA CARGAR ARCHIVO 
+Y CARGO DESDE DONDE QUEIRA
+LE DOY AL TICK verde Y COMIIT
+-- NO PUEDE HABER UN COMIT PENDIENTE PARA HACER ESTO---
+para asociar click => external
+
+
+
+create table grande2 (
+numero number,
+foto blob);
+
+
+create or replace procedure cargajpg ( ruta in varchar2,
+					fichero in varchar2,
+				 	valor in number)
+as 
+v_lob blob;
+v_file bfile;
+X NUMBER;
+
+begin 
+insert into grande2
+values (valor , empty_blob())
+returning NUMERO , foto into X, v_lob; -- SI HAY VARIAS COSAS QUE RETORNAR SE HACE PRIMERO CON
+				-- PRIMERO , SEGUNDO CON SEGUNDO, EN X GUARDO NUMERO (QUE ES ELN OMBRE
+				-- EN LA TABLA DEL ATRIBUTO) Y EN V_BLOB EL ATRIBUTO DE LA TABLA
+--- EMPTY_BLOB() ES LO QUE VALE FOTO EN LA TABLA, CON LO CUAL EN V_LOB METO EL VALOR
+-- FOTO DE LA TABLA QUE ACABO DE CARGAR ... O SEA V_LOB ES EL EMPTY_BLOB DE LA TUPLA INSERTADA
+
+
+v_file :=bfilename(RUTA, FICHERO);
+DBMS_LOB.FILEOPEN (V_FILE, DBMS_LOB.FILE_READONLY);
+			-- ABRO EL FICHERO QUE YA APUNTA A LA RUTA Y AL FICHERO
+			-- EN MODO LECTURA
+DBMS_LOB.LOADFROMFILE(V_LOB, V_FILE, DBMS_LOB.GETLENGTH(V_FILE));
+
+			--V_LOB 
+			--V_BFILE ENTRADA APUNTA AL FICHERO
+			-- DBMS_LOB.GETLENGTH(V_FILE) TODOS LOS BITES Q QIERO LEER DEL FICHERO
+
+DBMS_LOB.FILECLOSE(V_FILE);
+COMMIT WORK;
+EXCEPTION
+WHEN OTHERS
+THEN
+DBMS_OUTPUT.PUT_LINE( 'ERROR ' ||SQLERRM);
+END CARGAJPG;
+
+

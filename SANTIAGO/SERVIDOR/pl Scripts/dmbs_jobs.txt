@@ -1,0 +1,31 @@
+dbms_job.submit( , , , )
+
+PRIMER PARAMETRO EL PARAMETRO OUT HAY QUE DEFINIRLO ANTES
+LUEGO EL NOMBRE DEL PROCEDIMIENTO ENTRE ' ' Y CON ; AL FINALIZAR NOMBRE
+LUEGO A PARTIR DE CUANDO ESTA ACTIVO,
+LUEGO ENTRE ' ' EXPRESION DATE DE LA CADENCIA ( CADA CUANTO SE VA A EJECUTAR)
+
+select * from user_jobs; -- ver procedimientos
+
+---------
+create or replace procedure cola as
+begin
+ update emple3 set salario =salario+10 where dept_no =10;
+ commit work;
+end cola;
+---------------
+create or replace procedure lanzacola AS
+numerocola BINARY_INTEGER;
+begin 
+  DBMS_JOB.SUBMIT(numerocola, 'cola;',sysdate, 'sysdate + (10/(24*60*60))');
+  dbms_output.put_line('trabajo enviado ocon el nmumero ' || numerocola);
+  commit work;
+  end lanzacola;
+--------------------------
+begin
+  -- Call the procedure
+  lanzacola;
+end;
+-----------
+select * from user_jobs; -- ver procedimientos
+select * from emple3; ver el cambio en emple3

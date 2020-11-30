@@ -1,0 +1,145 @@
+CREATE OR REPLACE PACKAGE BODY CORREO AS
+
+  -- PARA ESCRIBIR LA CABECERA
+
+  PROCEDURE CABECERA(p_con     in out nocopy utl_smtp.connection,
+                     parametro in varchar2,
+                     valor     in varchar2) is
+  begin
+    utl_smtp.write_data(p_con, parametro || ': ' || valor || utl_tcp.crlf);
+  end;
+
+  PROCEDURE MANDAR_CORREO(REMITE  in varchar2,
+                          DESTINO in varchar2,
+                          ASUNTO  in varchar2,
+                          TEXTO   in varchar2) is
+    con          utl_smtp.connection;
+    codificacion varchar2(255);
+  
+  begin
+    -- CODIFICACION DEL SISTEMA
+    select value
+      into codificacion
+      from nls_database_parameters
+     where parameter = 'NLS_CHARACTERSET';
+    -- CONEXION CON AUTENTIFICACION
+    con := utl_smtp.open_connection(HOST, PUERTO);
+    utl_smtp.ehlo(con, DOMINIO);
+    utl_smtp.command(con, 'auth login');
+    utl_smtp.command(con,
+                     utl_encode.text_encode('daw2avellaneda@gmail.com', --- PONER CORREO
+                                            codificacion,
+                                            1));
+    utl_smtp.command(con,
+                     utl_encode.text_encode('jachis1000', codificacion, 1)); --- PONER CLAVE
+  
+    -- AJUSTAR CORREOS
+    utl_smtp.command(con, 'MAIL FROM: <' || REMITE || '>');
+    utl_smtp.command(con, 'RCPT TO: <' || DESTINO || '>');
+  
+    -- ESCRIBIR LAS CABECERAS
+    utl_smtp.open_data(con);
+    CABECERA(con, 'From', REMITE);
+    CABECERA(con, 'To', DESTINO);
+    CABECERA(con, 'Subject', ASUNTO);
+    CABECERA(con, 'Content-Type', 'text/plain');
+    CABECERA(con, 'X-Mailer', AGENTE);
+    utl_smtp.write_data(con, utl_tcp.crlf);
+  
+    -- ESCRIBIR CUERTO DEL CORREO
+    utl_smtp.write_data(con, TEXTO);
+    utl_smtp.close_data(con);
+    -- SOLTAR COMUNICACION
+    utl_smtp.quit(con);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      BEGIN
+        utl_smtp.quit(con);
+      EXCEPTION
+        WHEN OTHERS THEN
+          null;
+      END;
+      raise_application_error(-20000,
+                              'ERROR AL MANDAR LA MISIVA........' ||
+                              sqlerrm);
+  END MANDAR_CORREO;
+
+  PROCEDURE MANDAR_CORREO_HTML(REMITE  in varchar2,
+                               DESTINO in varchar2,
+                               ASUNTO  in varchar2) is
+    con          utl_smtp.connection;
+    codificacion varchar2(255);
+    cadena varchar2(32000);
+  begin
+    -- CODIFICACION DEL SISTEMA
+    select value
+      into codificacion
+      from nls_database_parameters
+     where parameter = 'NLS_CHARACTERSET';
+    -- CONEXION CON AUTENTIFICACION
+    con := utl_smtp.open_connection(HOST, PUERTO);
+    utl_smtp.ehlo(con, DOMINIO);
+    utl_smtp.command(con, 'auth login');
+    utl_smtp.command(con,
+                     utl_encode.text_encode('daw2avellaneda@gmail.com', --- PONER CORREO
+                                            codificacion,
+                                            1));
+    utl_smtp.command(con,
+                     utl_encode.text_encode('jachis1000', codificacion, 1)); --- PONER CLAVE
+  
+    -- AJUSTAR CORREOS
+    utl_smtp.command(con, 'MAIL FROM: <' || REMITE || '>');
+    utl_smtp.command(con, 'RCPT TO: <' || DESTINO || '>');
+  
+    -- ESCRIBIR LAS CABECERAS
+    utl_smtp.open_data(con);
+    CABECERA(con, 'From', REMITE);
+    CABECERA(con, 'To', DESTINO);
+    CABECERA(con, 'Subject', ASUNTO);
+    CABECERA(con, 'Content-Type', 'text/html'); -- text/plain o text/html
+    CABECERA(con, 'X-Mailer', AGENTE);
+    utl_smtp.write_data(con, utl_tcp.crlf);
+  
+    -- VAMOS CONSTRUYENDO EL HTML
+    --utl_smtp.write_data(con, TEXTO);
+    CADENA := '<HTML><BODY> <H1><font color=red> SE TE SALUDA </font>' || USER ||
+              '</H1>SALUDOS</BODY></HTML>';
+    UTL_SMTP.write_data(con,cadena);
+  
+    utl_smtp.close_data(con);
+    -- SOLTAR COMUNICACION
+    utl_smtp.quit(con);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      BEGIN
+        utl_smtp.quit(con);
+      EXCEPTION
+        WHEN OTHERS THEN
+          null;
+      END;
+      raise_application_error(-20000,
+                              'ERROR AL MANDAR LA MISIVA........' ||
+                              sqlerrm);
+  END MANDAR_CORREO_HTML;
+
+END CORREO;
+CREATE OR REPLACE PACKAGE CORREO AS
+  HOST    varchar2(256) := 'localhost';
+  PUERTO  pls_integer := 1925;
+  DOMINIO varchar2(256) := '
+gmail.com
+';
+  AGENTE constant varchar2(256) := 'Remitido por Oracle 11gR2 DAW2';
+
+ -- CORREO CON TEXTO
+  PROCEDURE MANDAR_CORREO(REMITE  in varchar2,
+                          DESTINO in varchar2,
+                          ASUNTO  in varchar2,
+                          TEXTO   in varchar2);
+ -- CORREO CON HTML
+  PROCEDURE MANDAR_CORREO_HTML(REMITE  in varchar2,
+                               DESTINO in varchar2,
+                               ASUNTO  in varchar2);
+END CORREO;

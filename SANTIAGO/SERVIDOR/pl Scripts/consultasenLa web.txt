@@ -1,0 +1,60 @@
+--paquete con dos procedures almacenados
+
+
+-- declaracion del procedure
+
+
+create or replace package consultasWeb as 
+procedure entrasql;
+procedure saca (consu in varchar2);
+end consultasWeb;
+
+-----
+
+-- creacion del package
+create or replace package body consultasWeb as
+
+procedure saca (consu in varchar2)
+as
+begin 
+ htp.htmlOpen;
+  htp.bodyOpen;
+owa_util.cellsprint(consu); -- ejecuta la consulta
+htp.tableCLose;
+htp.center(htf.anchor(curl =>'consultasWeb.entrasql' ,ctext=>' VOLVER'));
+htp.bodyClose;
+htp.htmlClose;
+exception 
+when others then
+htp.p('error');
+end  saca;
+
+
+procedure entrasql
+as
+begin 
+ htp.htmlOpen;
+  htp.bodyOpen;
+	htp.formOpen(curl=> 'consultasWeb.saca');  -- nombredePaquete.procedure // como si fuera el action 
+	htp.formTextarea( cname=> 'consu' , nrows =>2, ncolumns=> 30); -- el paquete de destino requiere tener tantos parametros con los mismos nombres que tengan los elementos dentro
+									-- del form como elementos con nombre haya dentro del form
+	htp.formSubmit(cvalue=> 'ENVIAR');
+	htp.formClose;
+	htp.bodyClose;
+	htp.htmlClose;
+   end entrasql;
+end consultasWeb;
+
+
+--------
+create or replace procedure catorcecell4 (consulta in varchar2)
+as
+begin 
+  htp.htmlOpen;
+  htp.bodyOpen;
+  htp.tableOpen( cborder=>2 , cattributes =>'BGCOLOR=RED') ;
+  owa_util.cellsprint(consulta);
+  htp.tableClose;
+  htp.bodyClose;
+  htp.htmlClose;
+  end catorcecell4;

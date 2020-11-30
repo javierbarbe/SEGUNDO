@@ -1,0 +1,48 @@
+create or replace procedure sumaURL (num1 in number , num2 in number)
+as 
+begin
+  HTP.P('<HTML>');
+  HTP.headOpen;
+         HTP.title(ctitle => 'MI PRIMERA PAGINA');
+  HTP.headClose;
+  HTP.P('<body style="background-color:red" >');
+ -- HTP.line(cattributes => 'style:"background-color:red" ');
+  HTP.header(cheader => 'GRANDE' ,nsize => 1);
+  HTP.line(cattributes => 'SIZE=10 WIDTH=50%');
+  htp.p('suma es: '|| (num1+num2)); 
+  HTP.bodyClose;
+  
+  HTP.htmlClose;
+  end sumaURL;
+
+
+---------para coger info del entorno html  
+
+create or replace procedure INFOENTORNO (num1 in number , num2 in number)
+as 
+res varchar2(30);
+begin
+  HTP.P('<HTML>');
+  HTP.headOpen;
+         HTP.title(ctitle => 'MI PRIMERA PAGINA');
+  HTP.headClose;
+  HTP.P('<body style="background-color:red" >');
+ owa_util.print_cgi_env;
+res:= owa_util.get_cgi_env(param_name=> 'REMOTE_ADDR');
+  HTP.header(cheader => 'GRANDE' ,nsize => 1);
+  HTP.line(cattributes => 'SIZE=10 WIDTH=50%');
+  htp.p('suma es: '|| (num1+num2)); 
+htp.p(res);
+  HTP.bodyClose;
+  
+  HTP.htmlClose;
+  end INFOENTORNO ;
+
+owa_util.print_cgi_env;
+owa_util.get_cgi_env(param_name=> 'REMOTE_ADDR');
+
+
+
+-- los enlaces son con htp.anchor
+tiene obligatorio 
+  htp.anchor(curl =>'nombreProcedimiento'  ,ctext =>'textodelEnlace' );

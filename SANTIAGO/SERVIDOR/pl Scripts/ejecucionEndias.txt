@@ -1,0 +1,4 @@
+'NEXT_DAY(TRUNC(SYSDATE),"VIERNES")+18/24' -- el trunc hace que sea desde las 00 -> total que se ejecuta a las 18
+-- si no se ejecutaria 18 horas mas tarde de la ejecucion
+-- se hace sobre la fraccion de horas 
+'last_day(trunc(sysdate))+0.5' -- a las doce medio dia del ultimo dia del mes

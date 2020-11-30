@@ -1,0 +1,41 @@
+CARGAR JAVA EN PL/SQL
+ejecutar cmd y teclear 
+loadjava -user SYSTEM/pass@TNSAlias -grant public -resolve FileOps9i.jar
+
+
+create or replace procedure inserta2(FICHERO IN VARCHAR2,
+					VALOR IN NUMBER)
+AS
+V_LOB BLOB;
+-- NOMBRE DEL OBJETO , TIPO OBJETO
+RUTA VARCHAR2(60):= 'C:\nose\';
+begin
+VLOB:= UTL_BINFILE.LOAD_BLOB_FROM_FILE(FILENAME=> RUTA ||FICHERO );
+INSERT INTO GRANDE2 VALUES (VALOR, V_LOB);
+DBMS_OUTPUT.PUT_LINE('REALIZADO');
+COMMIT WORK;
+
+EXCEPTION WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE('ERROR TIO');
+ROLLBACK WORK;
+END INSERTA2;
+
+-----------------PARA DAR DERECHOS 
+BEGIN 
+
+  DBMS_JAVA.GRANT_PERMISSION('PROFE','SYS:java.io.FilePermission',
+			 'C:\multi2\*', 'read,write,delete');
+  end;
+-- si en lugar de asterisco pongo guion, coge lo que haty en la carpeta y subcarpetasa
+
+
+CREATE OR REPLACE PROCEDURE INSERTA3(P_CLAVE IN NUMBER, FICHERO IN VARCHAR2)
+AS 
+V_LOB BLOB;
+BEGIN
+SELECT FOTO 
+INTO V_LOB
+FROM GRANDE2 
+WHERE NUMERO= P_CLAVE;
+UTL._BINFILE.SAVE_BLOB_TO_FILE( B=> V_LOB, FILENAME => FICHERO);
+END INSERTA3;
