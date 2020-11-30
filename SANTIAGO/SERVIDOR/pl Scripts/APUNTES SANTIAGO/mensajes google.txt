@@ -128,9 +128,7 @@ END CORREO;
 CREATE OR REPLACE PACKAGE CORREO AS
   HOST    varchar2(256) := 'localhost';
   PUERTO  pls_integer := 1925;
-  DOMINIO varchar2(256) := '
-gmail.com
-';
+  DOMINIO varchar2(256) := 'gmail.com';
   AGENTE constant varchar2(256) := 'Remitido por Oracle 11gR2 DAW2';
 
  -- CORREO CON TEXTO
