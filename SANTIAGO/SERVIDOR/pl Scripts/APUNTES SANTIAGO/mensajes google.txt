@@ -143,3 +143,8 @@ gmail.com
                                DESTINO in varchar2,
                                ASUNTO  in varchar2);
 END CORREO;
+
+--PROBARLO EN SQL CONSULTA
+begin 
+  correo.MANDAR_CORREO(REMITE => 'daw2avellaneda@gmail.com', DESTINO =>'jb.siesto@gmail.com' , ASUNTO =>'pruebaPL' , TEXTO =>'HOLA' );
+  END;
