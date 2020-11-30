@@ -1,0 +1,130 @@
+create or replace package body lobuno2 is
+
+PROCEDURE INICIAR
+as
+begin
+       htp.htmlopen;
+       htp.headopen;
+       htp.title(ctitle => 'SEGUNDA APLICACION CON LOB HACIA LA WEB');
+       htp.headclose;
+       htp.bodyopen(cattributes => 'BGCOLOR="#C0C0C0" TEXT="#FF0000"');
+       htp.line;
+       HTP.PRINT(HTF.HTITLE(CTITLE => 'SELECCIONA EL NUMERO DEL TIO',
+                           NSIZE => 3,CALIGN => 'CENTER'));
+       HTP.LINE;
+       
+HTP.NL
+;
+       htp.formopen(curl => 'lobuno2.hacer');
+       HTP.CENTEROPEN;
+       htp.p('CODIGO DEL POLLO');
+       HTP.FORMTEXT(CNAME => 'que',CSIZE => 4,CMAXLENGTH => 4,
+                             CATTRIBUTES =>'ALIGN=CENTER' );
+       
+HTP.NL
+;
+HTP.NL
+;
+       HTP.FORMSUBMIT(CVALUE => 'PULSAME Y ME VERAS',
+           CATTRIBUTES => 'ALIGN=CENTER TITLE="¡ PULSA LECHES !"');
+       HTP.CENTERCLOSE;
+       HTP.FORMCLOSE;
+       HTP.LINE;
+       HTP.BODYCLOSE;
+       HTP.HTMLCLOSE;
+ end iniciar;
+             
+        PROCEDURE hacer(que in varchar2)
+        as
+        reg enorme2%rowtype;
+        fichero varchar2(150);
+        
+        begin
+        select *
+             into reg
+             from enorme2
+             where numero=que;
+             fichero := reg.nombre||reg.numero;
+             utl_binfile.save_blob_to_file
+                  (b => reg.foto1,filename =>local|| fichero ||'.jpg');
+             utl_binfile.save_blob_to_file
+                  (b => reg.voz,filename => local ||fichero ||'.wav');
+             --segun el tipo de foto2     
+             utl_binfile.save_blob_to_file
+                  (b => reg.pagina,filename =>local|| fichero ||'.html');   
+             utl_binfile.save_blob_to_file
+                  (b => reg.pdf,filename =>local|| fichero || '.pdf');                    
+        HTP.HTMLOPEN;
+        HTP.TITLE(CTITLE => 'NOMBRE DEL SUJETO: '||REG.NOMBRE);
+        HTP.BODYOPEN(CATTRIBUTES => 'BGCOLOR="#C0C0C0" TEXT="#FF0000"');
+        HTP.HEADER(NSIZE => 3,CHEADER => 'NOMBRE DEL REGISTRO: '||
+                            HTF.STRONG(HTF.BOLD(REG.NOMBRE)));
+        HTP.LINE;
+        HTP.CENTEROPEN;
+        HTP.HEADER(NSIZE => 3,CHEADER => 'ESTOS SUS COMENTARIOS: ');
+        htp.p('<audio controls>');
+        htp.p('<source src=' || red||fichero|| '.wav'|| ' type="audio/wav">');
+        htp.p('</audio>' );                     
+         htp.anchor(curl => red|| fichero||'.html',ctext => 'SU PAGINA WEB OFFLINE');     
+         htp.line;
+          htp.anchor(curl => red||fichero ||'.pdf',ctext => 'DOCUMENTO PDF');           
+        HTP.LINE;
+         htp.p('<TEXTAREA READONLY ROWS=12  COLS=35/>');
+         htp.p(reg.comen);
+        htp.p('</textarea>');
+        
+        htp.img(curl => red||fichero ||'.jpg',cattributes => 
+                 'BORDER="2" WIDTH="300" HEIGHT="200"  ALT="Configura imagenes bestia"');
+        
+        
+htp.nl
+;
+        htp.anchor(curl => '
+http://localhost/nuevo/lobuno2.iniciar
+',ctext => 'VOLVER',
+                   cattributes => 'title="volver donde antes"');
+        
+HTP.NL
+;
+        htp.p('<BUTTON  TITLE="no entra examen" onclick="history.back();">VOLVER JAVASCRIP</BUTTON>');        
+                     
+        HTP.CENTERCLOSE;
+        HTP.LINE(CATTRIBUTES => 'SIZE=8');
+        HTP.BODYCLOSE;
+        HTP.HTMLCLOSE;
+      --  UTL_BINFILE.DELETE_FILE(FILENAME => fichero);
+        EXCEPTION
+          WHEN OTHERS THEN
+            HTP.P('ERROR: '||SQLERRM);
+        
+        END HACER;
+
+end lobuno2;
+create or replace package lobuno2 is
+  local varchar2(100):='C:\app\alumno\middleware\asinst_1\config\OHS\ohs1\htdocs\images\nueva\';
+  red varchar2(100):='
+http://localhost/images/nueva/
+';
+  
+  PROCEDURE INICIAR;
+  PROCEDURE HACER(que in varchar2);
+end lobuno2;
+
+
+
+
+create or replace package lobuno2 is
+  local varchar2(100):='C:\app\alumno\middleware\asinst_1\config\OHS\ohs1\htdocs\images\nueva\';
+  red varchar2(100):='
+http://localhost/images/nueva/
+';
+  
+  PROCEDURE INICIAR;
+  PROCEDURE HACER(que in varchar2);
+end lobuno2;
+BEGIN
+DBMS_JAVA.GRANT_PERMISSION('PUBLIC',                   
+                            'java.io.FilePermission',  
+                            'C:\app\alumno\middleware\asinst_1\config\OHS\ohs1\htdocs\images\datos\*',            
+                            'read,write'); 
+END;
