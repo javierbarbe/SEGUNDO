@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 30-nov-2020 13:41:25 by Hibernate Tools 5.2.1.Final -->
+<hibernate-mapping>
+    <class name="beans.Operaciones" table="operaciones" catalog="examencorchero" optimistic-lock="version">
+        <id name="codigo" type="java.lang.Integer">
+            <column name="CODIGO" />
+            <generator class="identity" />
+        </id>
+        <property name="dnivendedor" type="string">
+            <column name="DNIVENDEDOR" length="10" />
+        </property>
+        <property name="dnicomprador" type="string">
+            <column name="DNICOMPRADOR" length="10" />
+        </property>
+        <property name="concepto" type="string">
+            <column name="CONCEPTO" length="20" />
+        </property>
+        <property name="precio" type="java.lang.Integer">
+            <column name="PRECIO" />
+        </property>
+        <property name="fecha" type="timestamp">
+            <column name="FECHA" length="19" />
+        </property>
+        <property name="tiempodevolucion" type="java.lang.Integer">
+            <column name="TIEMPODEVOLUCION" />
+        </property>
+        <property name="canceable" type="java.lang.Boolean">
+            <column name="CANCEABLE" />
+        </property>
+    </class>
+</hibernate-mapping>

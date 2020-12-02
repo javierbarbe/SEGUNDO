@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 30-nov-2020 13:41:25 by Hibernate Tools 5.2.1.Final -->
+<hibernate-mapping>
+    <class name="beans.Articulos" table="articulos" catalog="examencorchero" optimistic-lock="version">
+        <id name="codigo" type="java.lang.Integer">
+            <column name="CODIGO" />
+            <generator class="identity" />
+        </id>
+        <property name="dni" type="string">
+            <column name="DNI" length="10" />
+        </property>
+        <property name="concepto" type="string">
+            <column name="CONCEPTO" length="20" />
+        </property>
+        <property name="precio" type="java.lang.Integer">
+            <column name="PRECIO" />
+        </property>
+    </class>
+</hibernate-mapping>

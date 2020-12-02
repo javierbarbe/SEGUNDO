@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 30-nov-2020 13:41:25 by Hibernate Tools 5.2.1.Final -->
+<hibernate-mapping>
+    <class name="beans.Usuarios" table="usuarios" catalog="examencorchero" optimistic-lock="version">
+        <id name="dni" type="string">
+            <column name="DNI" length="10" />
+            <generator class="assigned" />
+        </id>
+        <property name="login" type="string">
+            <column name="LOGIN" length="20" />
+        </property>
+        <property name="clave" type="string">
+            <column name="CLAVE" length="20" />
+        </property>
+    </class>
+</hibernate-mapping>

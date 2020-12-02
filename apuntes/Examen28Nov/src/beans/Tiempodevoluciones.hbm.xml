@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 30-nov-2020 13:41:25 by Hibernate Tools 5.2.1.Final -->
+<hibernate-mapping>
+    <class name="beans.Tiempodevoluciones" table="tiempodevoluciones" catalog="examencorchero" optimistic-lock="version">
+        <id name="tiempo" type="int">
+            <column name="tiempo" />
+            <generator class="assigned" />
+        </id>
+    </class>
+</hibernate-mapping>
