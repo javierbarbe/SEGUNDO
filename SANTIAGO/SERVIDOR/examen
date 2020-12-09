@@ -1,0 +1,378 @@
+create or replace package body EXAMEN is
+-- VARIABLES GLOBALES
+   -- CORREOS
+  HOST      varchar2(256) := 'localhost';
+  PUERTO    pls_integer := 1925;
+  DOMINIO   varchar2(256) := 'gmail.com';
+  AGENTE constant varchar2(256) := 'Remitido por Oracle 11gR2 DAW2';
+  ----- COOKIES
+   V_CKDNI   OWA_COOKIE.COOKIE;
+   V_CKCLAVE OWA_COOKIE.COOKIE;
+   V_CKEMAIL OWA_COOKIE.COOKIE;
+   --- fotos
+   APACHE VARCHAR2(200) :='C:\app\alumno\middleware\asinst_1\config\OHS\ohs1\htdocs\images\datos\';
+-------FIN DE VARIABLES GLOBALES
+-- --------------------PRIMERA PANTALLA ----------------------
+PROCEDURE INICIA AS
+  BEGIN 
+    HTP.htmlOpen;
+    HTP.ANCHOR(curl => 'EXAMEN.NUEVOS_DATOS',ctext => 'NUEVOS DATOS');
+    htp.nl;
+   HTP.ANCHOR(curl => 'EXAMEN.CONCERTAR_ENTREVISTA',ctext => 'CONCERTAR ENTREVISTA');
+    htp.nl;
+    HTP.ANCHOR(curl => 'EXAMEN.CANCELAR_ENTREVISTA',ctext => 'ANULAR ENTREVISTA');
+    htp.nl;
+    HTP.ANCHOR(curl => 'EXAMEN.LISTADO_DATOS',ctext => 'LISTADO DE DATOS');
+    htp.nl;
+    HTP.ANCHOR(curl => 'EXAMEN.MODIFICACION',ctext => 'MODIFICACION');
+    htp.nl;
+    HTP.ANCHOR(curl => 'EXAMEN.OPCIONES',ctext => 'OPCIONES');
+   HTP.htmlClose;
+   END INICIA;
+   
+ -- =================================================================== 
+ -- ===================================================================
+ 
+  -------------------------- MANDAR  CORREOS----------------
+PROCEDURE CABECERA(p_con     in out nocopy utl_smtp.connection,
+                     parametro in varchar2,
+                     valor     in varchar2) is
+  begin
+    utl_smtp.write_data(p_con, parametro || ': ' || valor || utl_tcp.crlf);
+  end;
+
+  PROCEDURE MANDAR_CORREO(REMITE  in varchar2,
+                          DESTINO in varchar2,
+                          ASUNTO  in varchar2,
+                          TEXTO   in varchar2) is
+    con          utl_smtp.connection;
+    codificacion varchar2(255);
+  
+  begin
+    -- CODIFICACION DEL SISTEMA
+    select value
+      into codificacion
+      from nls_database_parameters
+     where parameter = 'NLS_CHARACTERSET';
+    -- CONEXION CON AUTENTIFICACION
+    con := utl_smtp.open_connection(HOST, PUERTO);
+    utl_smtp.ehlo(con, DOMINIO);
+    utl_smtp.command(con, 'auth login');
+    utl_smtp.command(con,
+                     utl_encode.text_encode('daw2avellaneda@gmail.com', --- PONER CORREO
+                                            codificacion,
+                                            1));
+    utl_smtp.command(con,
+                     utl_encode.text_encode('jachis1000', codificacion, 1)); --- PONER CLAVE
+  
+    -- AJUSTAR CORREOS
+    utl_smtp.command(con, 'MAIL FROM: <' || REMITE || '>');
+    utl_smtp.command(con, 'RCPT TO: <' || DESTINO || '>');
+  
+    -- ESCRIBIR LAS CABECERAS
+    utl_smtp.open_data(con);
+    CABECERA(con, 'From', REMITE);
+    CABECERA(con, 'To', DESTINO);
+    CABECERA(con, 'Subject', ASUNTO);
+    CABECERA(con, 'Content-Type', 'text/plain');
+    CABECERA(con, 'X-Mailer', AGENTE);
+    utl_smtp.write_data(con, utl_tcp.crlf);
+  
+    -- ESCRIBIR CUERTO DEL CORREO
+    utl_smtp.write_data(con, TEXTO);
+    utl_smtp.close_data(con);
+    -- SOLTAR COMUNICACION
+    utl_smtp.quit(con);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      BEGIN
+        utl_smtp.quit(con);
+      EXCEPTION
+        WHEN OTHERS THEN
+          null;
+      END;
+      raise_application_error(-20000,
+                              'ERROR AL MANDAR LA MISIVA........' ||
+                              sqlerrm);
+  END MANDAR_CORREO;
+
+  -- =================================================================== 
+  -- ===================================================================
+  
+ ---------OPCION DE MENU 1-------------------
+PROCEDURE NUEVOS_DATOS 
+  AS
+  BEGIN 
+    HTP.htmlOpen;
+                      
+    HTP.formOpen(cenctype => 'multipart/form-data',
+                      cmethod  => 'post',
+                      curl => 'EXAMEN.REGISTRA');
+    HTP.P('<select name="ide">');
+    htp.p('<option value="cif">CIF</option>');
+    htp.p('<option value="nif">NIF</option>');
+    htp.p('</select>');
+    HTP.NL;
+    htp.p('NOMBRE:');
+    HTP.formText(cname => 'nombre');
+    HTP.NL;
+     htp.p('DNI/CIF:');
+    HTP.formText(cname => 'identificacion');
+    HTP.NL;
+     htp.p('CORREO:');
+    HTP.formText(cname => 'correo');
+    HTP.NL;
+    htp.p('IMAGEN');
+    HTP.formFile(cname => 'foto');
+    htp.formSubmit(cvalue => 'Registrate');
+    HTP.formClose;
+    HTP.htmlClose;
+    END NUEVOS_DATOS ;
+
+-----------------------REGISTRO USUARIOS O EMPRESAS-----------
+
+PROCEDURE REGISTRA (ide IN VARCHAR2 , 
+                   nombre IN VARCHAR2 DEFAULT NULL,
+                   identificacion IN VARCHAR2,
+                   correo IN VARCHAR2,
+                   foto IN VARCHAR2 DEFAULT NULL) AS
+            TEXTOMENSAJE VARCHAR2(200);
+           fto blob;
+           real varchar2(2000);
+           BEGIN
+     if (foto is not null) then
+      real := SUBSTR(foto, INSTR(foto, '/') + 1);
+    
+      -- BORRAR UNO EIXISTENTE PARA PODER ACTUALIZAR
+      DELETE FROM subidon WHERE name = real;
+    
+      -- ACTUALIZA CON EL NOMBRE REAL
+      UPDATE subidon SET name = real WHERE name = foto;
+      commit;
+    end if;
+     select subidon.blob_content into fto from subidon where name = real;
+     HTP.P(IDE|| ' ES EL IDE');
+   IF IDE = 'cif' THEN 
+     INSERT INTO EMPRESAS VALUES (IDENTIFICACION,NOMBRE, fto, CORREO, FOTO);
+   ELSE
+      INSERT INTO PROFE.ASPIRANTES VALUES (IDENTIFICACION,NOMBRE, fto, CORREO, FOTO);
+   END IF;
+   -- guardo en APACHE LA FOTO PARA ACCEDER LUEGO Y MOSTRARLA
+    utl_binfile.Save_BLOB_To_File(fto,
+                                    filename => APACHE ||
+                                               nombre|| '.jpg');
+   COMMIT;
+   TEXTOMENSAJE:= 'ENHORABUENA TE HAS REGISTRADO ' ||NOMBRE;
+   MANDAR_CORREO('jb.siesto@gmail.com',correo, 'REGISTRO EN LA APP', TEXTOMENSAJE);
+   EXCEPTION WHEN OTHERS THEN
+     HTP.P('HA HABIDO ALGUN ERROR ' || SQLERRM);
+      HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+     END REGISTRA;
+
+-- ===================================================================
+-- ===================================================================
+
+-----------MENU CONCERTAR ENTREVISTA---------------
+PROCEDURE CONCERTAR_ENTREVISTA AS
+fecha date;
+  BEGIN
+    HTP.htmlOpen;
+    
+    HTP.formOpen(curl => 'EXAMEN.REGISTRACITA');
+    FOR REG IN (SELECT * FROM EMPRESAS) LOOP 
+      HTP.P(htf.formRadio(cname  => 'CIF_EMPRESA',
+                          cvalue => reg.cif) ||reg.nombre);
+      HTP.img(curl => APACHE||''||REG.NOMBRE||'.jpg');
+     HTP.NL;
+    END LOOP;
+    for reg2 in (select * from aspirantes) loop 
+      HTP.P(htf.formRadio(cname  => 'NIF_ASPIRANTE',
+                          cvalue => reg2.nif) ||reg2.nombre);
+     HTP.img(curl => APACHE||''||REG2.NOMBRE||'.jpg');
+     HTP.NL;
+    end looP;
+    HTP.P('DIA'); 
+    OWA_UTIL.listprint('SELECT DISTINCT dia,dia,NULL FROM diasmes','DIA',1);
+    HTP.P('MES');   
+    OWA_UTIL.listprint('SELECT DISTINCT numero,nombre,NULL FROM meses','MES',1);
+    HTP.P('AÑO'); 
+    OWA_UTIL.listprint('SELECT DISTINCT numero,numero,NULL FROM annos','ANNO',1);
+    HTP.formSubmit(cvalue => 'CONCERTAR ENTREVISTA');
+    HTP.formClose;
+    HTP.HTMLCLOSE;
+END CONCERTAR_ENTREVISTA;
+
+
+--------------------- REGISTRAR CITA--------------
+PROCEDURE REGISTRACITA (CIF_EMPRESA IN VARCHAR2, NIF_ASPIRANTE IN VARCHAR2,
+                        DIA IN VARCHAR2, MES IN VARCHAR2, ANNO IN VARCHAR2)
+  AS
+  correoEMPRESA EMPRESAS%rowtype;
+  CORREOASPIRANTE ASPIRANTES%rowtype;
+  fecha ENTREVISTAS.FECHA%TYPE;
+  cadenafecha varchar2(33);
+  TEXTOSMS VARCHAR2(500);
+  BEGIN
+  cadenafecha:=dia||'/'||mes||'/'||anno;
+  fecha:= to_date(cadenafecha,'dd/mm/yyyy'); 
+  INSERT INTO ENTREVISTAS VALUES(ENTREVISTASSEC.NEXTVAL,CIF_EMPRESA,NIF_ASPIRANTE, FECHA);
+  select * into CORREOEMPRESA FROM EMPRESAS WHERE CIF=CIF_EMPRESA;
+   select * into CORREOASPIRANTE FROM ASPIRANTES WHERE NIF=NIF_ASPIRANTE;
+   TEXTOSMS:= 'ENHORABUENA, TIENES UNA ENTREVISTA CON ' || correoEMPRESA.Nombre ||' el ' || cadenafecha;
+  MANDAR_CORREO(CORREOEMPRESA.CORREO,CORREOASPIRANTE.CORREO,'CITA CONCERTADA', TEXTOSMS);
+  COMMIT;
+  EXCEPTION WHEN OTHERS THEN 
+    HTP.P('SE HA ENCONTRADO UN ERROR REGISTRANDO LA CITA ' ||SQLERRM);
+    HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+  END REGISTRACITA; 
+
+-- ===================================================================
+-- ===================================================================
+
+------------MENU CANCELAR ENTREVISTA
+
+PROCEDURE CANCELAR_ENTREVISTA 
+AS
+NOMBREMPRESA EMPRESAS.NOMBRE%TYPE;
+NOMBREASPIRANTE ASPIRANTES.NOMBRE%TYPE;
+BEGIN
+HTP.htmlOpen;
+HTP.formOpen(curl => 'EXAMEN.CANCELACION_ENTREVISTA');
+
+FOR REG IN (SELECT * FROM ENTREVISTAS) LOOP 
+  SELECT NOMBRE INTO NOMBREMPRESA FROM EMPRESAS WHERE EMPRESAS.CIF = REG.CIF_EMPRESA;
+  SELECT NOMBRE INTO NOMBREASPIRANTE FROM ASPIRANTES WHERE ASPIRANTES.NIF = REG.NIF_ASPIRANTE;
+  HTP.P(HTF.formRadio(cname => 'ELEGIDA',cvalue => REG.IDE) 
+                            || NOMBREMPRESA ||'--'||NOMBREASPIRANTE ||'EN '|| REG.FECHA);
+  END LOOP;
+  HTP.formSubmit(cvalue => 'CANCELAR');
+  htp.formClose;
+   HTP.NL;
+     HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+HTP.htmlClose;
+END CANCELAR_ENTREVISTA;
+
+---------------------- CANCELACION ENTREVISTA 
+
+PROCEDURE CANCELACION_ENTREVISTA ( ELEGIDA IN VARCHAR2)
+  AS 
+  NOMBREMPRESA EMPRESAS.NOMBRE%TYPE;
+  NOMBREASPIRANTE ASPIRANTES.NOMBRE%TYPE;
+  correoaspirante aspirantes.correo%type;
+  nif_aspirante aspirantes.nif%type;
+  TEXTOMENSAJE VARCHAR2(500);
+  CANCELACION CANCELADAS%ROWTYPE;
+  FECHA ENTREVISTAS.FECHA%TYPE;
+  ENTREVISTA ENTREVISTAS%ROWTYPE;
+  CIF_EMPRESA EMPRESAS.CIF%TYPE;
+  BEGIN
+    htp.p(elegida);
+     select entrevistas.nif_aspirante ,ENTREVISTAS.CIF_EMPRESA, ENTREVISTAS.FECHA
+           into nif_Aspirante, CIF_EMPRESA , FECHA
+           from entrevistas where entrevistas.ide = elegida;
+     SELECT ASPIRANTES.NOMBRE INTO NOMBREASPIRANTE FROM ASPIRANTES WHERE ASPIRANTES.NIF= NIF_ASPIRANTE;
+    SELECT EMPRESAS.NOMBRE INTO NOMBREMPRESA FROM EMPRESAS WHERE EMPRESAS.CIF= CIF_EMPRESA;
+    SELECT *  INTO ENTREVISTA FROM ENTREVISTAS WHERE IDE = ELEGIDA;
+    INSERT INTO CANCELADAS VALUES (ENTREVISTA.FECHA,
+                                  ENTREVISTA.CIF_EMPRESA,
+                                  ENTREVISTA.NIF_ASPIRANTE,       
+                                  NOMBREMPRESA,
+                                  NOMBREASPIRANTE);
+    DELETE FROM ENTREVISTAS WHERE ENTREVISTAS.IDE= ELEGIDA;
+    COMMIT;
+   
+    
+    select correo into correoaspirante from aspirantes where aspirantes.nif= nif_aspirante;
+   
+    TEXTOMENSAJE:='HAS CANCELADO ENTREVISTA CON ' || NOMBREMPRESA || ' EN FECHA ' ||FECHA;
+    MANDAR_CORREO('jb.siesto@gmail.com', correoaspirante,'CANCELACION ENTREVISTA', TEXTOMENSAJE); 
+    HTP.NL;
+    
+    HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+    EXCEPTION WHEN OTHERS THEN
+      HTP.P('ERROR AL CANCELAR ESA ENTREVISTA ' ||SQLERRM);
+      HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+    END CANCELACION_ENTREVISTA;
+
+-- ===================================================================
+--------------MENU LISTADO DE DATOS -------------------------------
+PROCEDURE LISTADO_DATOS 
+  AS 
+  BEGIN
+    HTP.htmlOpen;
+    HTP.formOpen(curl=>'EXAMEN.LISTA_DATOS');
+    HTP.P('<select name="opcion">');
+    htp.p('<option value="actual">ACTUALES</option>');
+    htp.p('<option value="cancelada">CANCELADAS</option>');
+    htp.p('</select>');
+    HTP.formSubmit(cvalue => 'Consultar');
+    HTP.NL;
+    HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+    HTP.htmlClose;
+    END LISTADO_DATOS;
+
+
+-- ---------------VISTA LISTAR DATOS--------
+PROCEDURE LISTA_DATOS (opcion in varchar2) 
+  as 
+  NOMBREMPRESA CANCELADAS.NOMBRE_EMPRESA%TYPE;
+  NOMBREASPIRANTE CANCELADAS.NOMBRE_ASPIRANTE%TYPE;
+  begin
+    htp.htmlOpen;
+    HTP.P(OPCION);
+    htp.tableOpen(cborder => 'BORDER');
+    if(opcion = 'actual') then
+    for reg in (select * from entrevistas) loop
+       SELECT NOMBRE INTO NOMBREMPRESA FROM EMPRESAS WHERE empresas.cif= reg.cif_empresa;
+       SELECT NOMBRE INTO NOMBREASPIRANTE FROM ASPIRANTES WHERE ASPIRANTES.NIF= reg.nif_aspirante;
+      htp.tableRowOpen;
+      htp.tableData( 'EMPRESA: '||NOMBREMPRESA || '; ASPIRANTE: ' ||NOMBREASPIRANTE|| '; FECHA '|| reg.fecha);
+      htp.tableRowClose;
+    end loop;
+    else
+      for reg in (select * from canceladas) loop
+       NOMBREMPRESA := REG.NOMBRE_EMPRESA;
+        NOMBREASPIRANTE:=REG.NOMBRE_ASPIRANTE;
+       --SELECT nombre_empresa INTO NOMBREMPRESA FROM EMPRESAS WHERE empresas.cif= reg.cif_empresa;
+      -- SELECT canceladas.nombre_aspirante INTO NOMBREASPIRANTE FROM ASPIRANTES WHERE ASPIRANTES.NIF= reg.nif_aspirante;
+      htp.tableRowOpen;
+      htp.tableData( 'EMPRESA: '||NOMBREMPRESA || '; ASPIRANTE: ' ||NOMBREASPIRANTE|| '; FECHA '|| reg.fecha);
+      htp.tableRowClose;
+    end loop;
+    end if;
+    htp.tableclose;
+    HTP.NL;
+     HTP.anchor(curl => 'EXAMEN.INICIA',ctext => 'VUELVE A INICIO');
+    htp.htmlClose;
+   
+    end lista_datos;
+
+-- ===================================================================
+-- ===================================================================
+
+-- ----------------MENU MODIFICACION ----------------------------------------
+PROCEDURE MODIFICACION 
+  AS
+  BEGIN
+    HTP.htmlOpen;
+    HTP.formOpen(curl => 'EXAMEN.MODIFICA');
+    HTP.formRadio(cname => 'eleccion',cvalue => 'empresa');
+    htp.p('EMPRESA');
+    HTP.NL;
+    htp.formRadio(cname => 'eleccion', cvalue=> 'aspirante');
+    HTP.P('ASPIRANTE');
+    htp.p('NIF/CIF');
+    HTP.formText(cname => 'ide');
+    HTP.NL;
+    HTP.formCheckbox(cname => 'ncheck');
+    htp.p('NOMBRE');
+    HTP.formText(cname => 'nombre');
+     HTP.NL;
+    HTP.formCheckbox(cname => 'ncheck');
+    htp.p('NOMBRE');
+    HTP.formText(cname => 'nombre');
+    HTP.htmlClose;
+    END MODIFICACION;
+
+end EXAMEN;
