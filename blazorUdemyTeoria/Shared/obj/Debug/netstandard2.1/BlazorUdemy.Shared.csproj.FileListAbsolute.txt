@@ -1,0 +1,9 @@
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\bin\Debug\netstandard2.1\BlazorUdemy.Shared.deps.json
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\bin\Debug\netstandard2.1\BlazorUdemy.Shared.dll
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\bin\Debug\netstandard2.1\BlazorUdemy.Shared.pdb
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.csprojAssemblyReference.cache
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.AssemblyInfoInputs.cache
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.AssemblyInfo.cs
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.csproj.CoreCompileInputs.cache
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.dll
+C:\Users\javiLenovo\source\repos\BlazorUdemy\Shared\obj\Debug\netstandard2.1\BlazorUdemy.Shared.pdb
